@@ -29,6 +29,7 @@
     "undef": false,
     "validthis": false,
     "smarttabs": false,
+    "node": true,
     "proto": false,
     "onecase": false,
     "nonstandard": false,

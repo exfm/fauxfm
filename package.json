@@ -1,0 +1,20 @@
+{
+  "author": " <>",
+  "name": "fauxfm",
+  "description": "a fake api for testing",
+  "version": "0.0.0",
+  "homepage": "http://github.com/exfm/fauxfm",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/exfm/fauxfm.git"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}

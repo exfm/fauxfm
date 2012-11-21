@@ -41,8 +41,8 @@ function getData(username, start, results){
 	};
 }
 
-app.listen(3000);
-console.log('App listening on 3000');
+app.listen(8088);
+console.log('App listening on 8088');
 console.log('Fake data:');
 for (var key in fakeData){
 	console.log(key);

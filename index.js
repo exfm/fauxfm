@@ -15,8 +15,13 @@ app.get('/api/v3/user/:user/loved', function(req, res){
 		username = req.params.user;
 
 	if (!fakeData.hasOwnProperty(username)){
-		return res.send(404);
+		res.statusCode = 404;
+		return res.send({
+			'status_code': 404,
+			'status_text': "Unknown user " + username + "."
+		});
 	}
+	res.statusCode = 200;
 	return res.json(getData(username, start, results));
 });
 

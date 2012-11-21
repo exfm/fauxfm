@@ -11,7 +11,9 @@
   "scripts": {
     "test": "grunt test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "express": "3.0.3"
+  },
   "devDependencies": {},
   "optionalDependencies": {},
   "engines": {

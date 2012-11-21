@@ -37,7 +37,7 @@ leveldb.open('fakedata.db', { create_if_missing: true }, function(err, data){
 	console.log('server running.');
 	console.log('database connected.');
 	db = data;
-	app.listen(3000);
+	app.listen(8088);
 });
 
 function parseData(userLoves, start, results){

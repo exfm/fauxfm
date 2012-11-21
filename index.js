@@ -33,7 +33,7 @@ app.get('/api/v3/user/:user/loved', function(req, res){
 	});
 });
 
-leveldb.open('fakedata.db', { create_if_missing: true }, function(err, data){
+leveldb.open(__dirname + '/fakedata.db', { create_if_missing: true }, function(err, data){
 	console.log('server running.');
 	console.log('database connected.');
 	db = data;
@@ -101,7 +101,7 @@ function getData(username){
                 });
             }
             resultsSet = resultsSet.concat(res.body.songs);
-            return d.resolve(resultsSet);
+            insertIntoDB(username, resultsSet).then(d.resolve);
         });
     return d.promise;
 }

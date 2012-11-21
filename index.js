@@ -11,7 +11,7 @@ fakeData = JSON.parse(fs.readFileSync(__dirname + '/fakedata.json', 'utf-8'));
 
 app.get('/api/v3/user/:user/loved', function(req, res){
 	var start = req.query.start || 0,
-		results = req.query.results || 100,
+		results = req.query.results || 20,
 		username = req.params.user;
 
 	if (!fakeData.hasOwnProperty(username)){

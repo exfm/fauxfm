@@ -11,8 +11,8 @@ var app = express(),
 	apiBaseUrl = 'http://ex.fm/api/v3';
 
 app.get('/api/v3/user/:user/loved', function(req, res){
-	var start = req.query.start || 0,
-		results = req.query.results || 20,
+	var start = parseInt(req.query.start, 10) || 0,
+		results = parseInt(req.query.results, 10) || 20,
 		username = req.params.user;
 
 	db.get(username, function(err, data){
@@ -45,7 +45,9 @@ function parseData(userLoves, start, results){
 	if (start + results > userLoves.length){
 		songs = userLoves.slice(start, userLoves.length - 1);
 	}
-	songs = userLoves.slice(start, start + results);
+	else {
+		songs = userLoves.slice(start, start + results);
+	}
 	return {
 		'status_test': "OK",
 		'status_code': 200,

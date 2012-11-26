@@ -42,8 +42,9 @@ leveldb.open(__dirname + '/fakedata.db', { create_if_missing: true }, function(e
 
 function parseData(userLoves, start, results){
 	var songs;
+	console.log(userLoves.length);
 	if (start + results > userLoves.length){
-		songs = userLoves.slice(start, userLoves.length - 1);
+		songs = userLoves.slice(start, userLoves.length);
 	}
 	else {
 		songs = userLoves.slice(start, start + results);

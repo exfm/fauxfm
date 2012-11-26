@@ -17,9 +17,9 @@ app.get('/api/v3/user/:user/loved', function(req, res){
 
 	db.get(username, function(err, data){
 		if (data === null){
-			return getData(username).then(function(userLoves){
+			return getLoveData(username).then(function(userLoves){
 				res.statusCode = 200;
-				return res.json(parseData(userLoves, start, results));
+				return res.json(parseLoves(userLoves, start, results));
 			}, function(){
 				res.statusCode = 404;
 				return res.send({
@@ -29,7 +29,27 @@ app.get('/api/v3/user/:user/loved', function(req, res){
 			});
 		}
 		res.statusCode = 200;
-		return res.json(parseData(JSON.parse(data), start, results));
+		return res.json(parseLoves(JSON.parse(data), start, results));
+	});
+});
+
+app.get('/api/v3/user/:user/loved_ids', function(req, res){
+	var username = req.params.user;
+	db.get(username + ':loved_ids', function(err, data){
+		if (data === null){
+			return getLoveIds(username).then(function(userLoveIds){
+				res.statusCode = 200;
+				return res.json(parseLoveIds(userLoveIds));
+			}, function(){
+				res.statusCode = 404;
+				return res.send({
+					'status_code': 404,
+					'status_text': "Unknown user " + username + "."
+				});
+			});
+		}
+		res.statusCode = 200;
+		return res.json(parseLoveIds(JSON.parse(data)));
 	});
 });
 
@@ -40,7 +60,7 @@ leveldb.open(__dirname + '/fakedata.db', { create_if_missing: true }, function(e
 	app.listen(8088);
 });
 
-function parseData(userLoves, start, results){
+function parseLoves(userLoves, start, results){
 	var songs;
 	console.log(userLoves.length);
 	if (start + results > userLoves.length){
@@ -59,7 +79,16 @@ function parseData(userLoves, start, results){
 	};
 }
 
-function getData(username){
+function parseLoveIds(userLoveIds){
+	return {
+		'status_test': "OK",
+		'status_code': 200,
+		'total': userLoveIds.length,
+		'songs': userLoveIds
+	};
+}
+
+function getLoveData(username){
     var d = when.defer(),
         resultsSet = [],
         resultsSize = 100,
@@ -109,9 +138,23 @@ function getData(username){
     return d.promise;
 }
 
-function insertIntoDB(username, results){
+function getLoveIds(username){
+    var d = when.defer(),
+		path = apiBaseUrl + '/user/' + username + '/loved_ids';
+     request
+        .get(path)
+        .end(function(res){
+            if (res.statusCode !== 200){
+                return d.reject();
+            }
+            return insertIntoDB(username+':loved_ids', res.body.songs).then(d.resolve);
+        });
+    return d.promise;
+}
+
+function insertIntoDB(key, results){
 	var d = when.defer();
-	db.put(username, JSON.stringify(results), function(err){
+	db.put(key, JSON.stringify(results), function(err){
 		return d.resolve(results);
 	});
 	return d.promise;

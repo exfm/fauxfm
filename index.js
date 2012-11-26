@@ -84,7 +84,7 @@ function parseLoveIds(userLoveIds){
 		'status_test': "OK",
 		'status_code': 200,
 		'total': userLoveIds.length,
-		'songs': userLoveIds
+		'song_ids': userLoveIds
 	};
 }
 

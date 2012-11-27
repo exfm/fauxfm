@@ -129,11 +129,11 @@ function getLoveData(username){
                         });
                     return p.promise;
                 })).then(function(){
-                    insertIntoDB(username, resultsSet).then(d.resolve);
+                    d.resolve(insertIntoDB(username, resultsSet));
                 });
             }
             resultsSet = resultsSet.concat(res.body.songs);
-            insertIntoDB(username, resultsSet).then(d.resolve);
+            d.resolve(insertIntoDB(username, resultsSet));
         });
     return d.promise;
 }
@@ -147,7 +147,7 @@ function getLoveIds(username){
             if (res.statusCode !== 200){
                 return d.reject();
             }
-            return insertIntoDB(username+':loved_ids', res.body.songs).then(d.resolve);
+            return d.resolve(insertIntoDB(username+':loved_ids', res.body.song_ids));
         });
     return d.promise;
 }

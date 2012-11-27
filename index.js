@@ -17,9 +17,9 @@ app.get('/api/v3/user/:user/loved', function(req, res){
 
 	db.get(username, function(err, data){
 		if (data === null){
-			return getLoveData(username).then(function(userLoves){
+			return getAllData('user', username).then(function(userLoves){
 				res.statusCode = 200;
-				return res.json(parseLoves(userLoves, start, results));
+				return res.json(parseSongs(userLoves, start, results));
 			}, function(){
 				res.statusCode = 404;
 				return res.send({
@@ -29,7 +29,30 @@ app.get('/api/v3/user/:user/loved', function(req, res){
 			});
 		}
 		res.statusCode = 200;
-		return res.json(parseLoves(JSON.parse(data), start, results));
+		return res.json(parseSongs(JSON.parse(data), start, results));
+	});
+});
+
+app.get('/api/v3/site/:site/songs', function(req, res){
+	var start = parseInt(req.query.start, 10) || 0,
+		results = parseInt(req.query.results, 10) || 20,
+		site = req.params.site;
+
+	db.get(site, function(err, data){
+		if (data === null){
+			return getAllData('site', site).then(function(siteSongs){
+				res.statusCode = 200;
+				return res.json(parseSongs(siteSongs, start, results));
+			}, function(){
+				res.statusCode = 404;
+				return res.send({
+					'status_code': 404,
+					'status_text': "Unknown site " + site + "."
+				});
+			});
+		}
+		res.statusCode = 200;
+		return res.json(parseSongs(JSON.parse(data), start, results));
 	});
 });
 
@@ -60,21 +83,20 @@ leveldb.open(__dirname + '/fakedata.db', { create_if_missing: true }, function(e
 	app.listen(8088);
 });
 
-function parseLoves(userLoves, start, results){
+function parseSongs(s, start, results){
 	var songs;
-	console.log(userLoves.length);
-	if (start + results > userLoves.length){
-		songs = userLoves.slice(start, userLoves.length);
+	if (start + results > s.length){
+		songs = s.slice(start, s.length);
 	}
 	else {
-		songs = userLoves.slice(start, start + results);
+		songs = s.slice(start, start + results);
 	}
 	return {
 		'status_test': "OK",
 		'status_code': 200,
 		'results': songs.length,
 		'start': start,
-		'total': userLoves.length,
+		'total': s.length,
 		'songs': songs
 	};
 }
@@ -88,13 +110,20 @@ function parseLoveIds(userLoveIds){
 	};
 }
 
-function getLoveData(username){
+function getAllData(entityType, entity){
     var d = when.defer(),
         resultsSet = [],
         resultsSize = 100,
         start = 0,
-        startArray= [],
-        path = apiBaseUrl + '/user/' + username + '/loved';
+        startArray = [],
+        path;
+
+    if (entityType === 'user') {
+		path = apiBaseUrl + '/user/' + entity + '/loved';
+    }
+    if (entityType === 'site') {
+		path = apiBaseUrl + '/site/' + entity + '/songs';
+    }
     request
         .get(path)
         .query({
@@ -129,11 +158,11 @@ function getLoveData(username){
                         });
                     return p.promise;
                 })).then(function(){
-                    d.resolve(insertIntoDB(username, resultsSet));
+                    d.resolve(insertIntoDB(entity, resultsSet));
                 });
             }
             resultsSet = resultsSet.concat(res.body.songs);
-            d.resolve(insertIntoDB(username, resultsSet));
+            d.resolve(insertIntoDB(entity, resultsSet));
         });
     return d.promise;
 }

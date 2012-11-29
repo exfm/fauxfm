@@ -10,6 +10,8 @@ var app = express(),
 	db,
 	apiBaseUrl = 'http://ex.fm/api/v3';
 
+app.use(express.bodyParser());
+
 app.get('/api/v3/user/:user/loved', function(req, res){
 	var start = parseInt(req.query.start, 10) || 0,
 		results = parseInt(req.query.results, 10) || 20,
@@ -73,6 +75,15 @@ app.get('/api/v3/user/:user/loved_ids', function(req, res){
 		}
 		res.statusCode = 200;
 		return res.json(parseLoveIds(JSON.parse(data)));
+	});
+});
+
+app.post('/shuffle/new_songs', function(req, res){
+	return res.send({
+		'status_test': "OK",
+		'status_code': 200,
+		'tokens': req.body.tokens.length,
+		'new_songs': req.body.new_songs.length
 	});
 });
 

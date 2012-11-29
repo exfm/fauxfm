@@ -80,8 +80,6 @@ app.get('/api/v3/user/:user/loved_ids', function(req, res){
 
 app.post('/shuffle/new_songs', function(req, res){
 	return res.send({
-		'status_test': "OK",
-		'status_code': 200,
 		'tokens': req.body.tokens.length,
 		'new_songs': req.body.new_songs.length
 	});

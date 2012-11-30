@@ -58,7 +58,7 @@ app.get('/api/v3/site/:site/songs', function(req, res){
 	});
 });
 
-app.get('/api/v3/user/:user/loved_ids', function(req, res){
+app.get('/api/v3/user/:user/loved-ids', function(req, res){
 	var username = req.params.user;
 	db.get(username + ':loved_ids', function(err, data){
 		if (data === null){

@@ -35,7 +35,7 @@ app.get('/api/v3/user/:user/loved', function(req, res){
 	});
 });
 
-app.get('/api/v3/site/:site/songs', function(req, res){
+app.get('/api/v3/site/:site/song-ids', function(req, res){
 	var start = parseInt(req.query.start, 10) || 0,
 		results = parseInt(req.query.results, 10) || 20,
 		site = req.params.site;
@@ -78,26 +78,35 @@ app.get('/api/v3/user/:user/loved-ids', function(req, res){
 	});
 });
 
-// Temporary path until this route is deployed to exfm prod
 app.get('/api/v3/explore/:tag/song-ids', function(req, res){
-    var songIds = [],
-        i;
+    var tag = req.params.tag,
+        results = req.params.results,
+        path = apiBaseUrl + '/explore/' + tag + '/song-ids',
+        songIds;
 
-    if(req.params.tag === 'twohundredsongs'){
-        for(i = 1; i < 201; i++){
-            songIds.push(i);
+    db.get(tag + ':song_ids', function(err, data){
+        if (data === null){
+            return request
+                .get(path)
+                .query({'results': results})
+                .end(function(err, res){
+                    if(err){
+                        res.statusCode = 404;
+                        return res.send({
+                            'status_code': 404,
+                            'status_text': "Something went wrong getting genre song ids in fauxfm."
+                        });
+                    }
+                    res.statusCode = 200;
+                    insertIntoDB(tag + ':song_ids', res.body.song_ids);
+                    return res.send(res.body.song_ids);
+                });
         }
-    }
-
-    return res.send({
-        'total': 50000,
-        'start': 0,
-        'results': songIds.length,
-        'song_ids': songIds
+        return res.send(data);
     });
 });
 
-app.post('/shuffle/new_songs', function(req, res){
+app.post('/shuffle/new-songs', function(req, res){
 	return res.send({
 		'tokens': req.body.tokens.length,
 		'new_songs': req.body.new_songs.length
@@ -203,7 +212,7 @@ function getAllData(entityType, entity){
 
 function getLoveIds(username){
     var d = when.defer(),
-		path = apiBaseUrl + '/user/' + username + '/loved_ids';
+		path = apiBaseUrl + '/user/' + username + '/loved-ids';
      request
         .get(path)
         .end(function(res){

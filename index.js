@@ -85,6 +85,12 @@ app.post('/shuffle/new_songs', function(req, res){
 	});
 });
 
+app.get('/shuffle/:token/last-new-songs', function(req, res){
+	return res.send({
+		'last_new_songs': "2012-12-10T23:18:21.630Z"
+	});
+});
+
 leveldb.open(__dirname + '/fakedata.db', { create_if_missing: true }, function(err, data){
 	console.log('server running.');
 	console.log('database connected.');

@@ -9,7 +9,8 @@
     "url": "git://github.com/exfm/fauxfm.git"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "start": "node index.js"
   },
   "dependencies": {
     "express": "3.0.3",

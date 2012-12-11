@@ -83,7 +83,7 @@ app.get('/api/v3/explore/:tag/song-ids', function(req, res){
     var songIds = [],
         i;
 
-    if(res.params.tag === 'ahundredsongs'){
+    if(req.params.tag === 'twohundredsongs'){
         for(i = 1; i < 201; i++){
             songIds.push(i);
         }

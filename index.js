@@ -12,39 +12,14 @@ var app = express(),
 
 app.use(express.bodyParser());
 
-app.get('/api/v3/user/:user/loved', function(req, res){
-	var start = parseInt(req.query.start, 10) || 0,
-		results = parseInt(req.query.results, 10) || 20,
-		username = req.params.user;
+app.get('/api/v3/site/:site/all-song-ids', function(req, res){
+	var site = req.params.site;
 
-	db.get(username, function(err, data){
+	db.get('site:' + site + ':song_ids', function(err, data){
 		if (data === null){
-			return getAllData('user', username).then(function(userLoves){
+			return getUserOrSiteIds('site', site).then(function(song_ids){
 				res.statusCode = 200;
-				return res.json(parseSongs(userLoves, start, results));
-			}, function(){
-				res.statusCode = 404;
-				return res.send({
-					'status_code': 404,
-					'status_text': "Unknown user " + username + "."
-				});
-			});
-		}
-		res.statusCode = 200;
-		return res.json(parseSongs(JSON.parse(data), start, results));
-	});
-});
-
-app.get('/api/v3/site/:site/song-ids', function(req, res){
-	var start = parseInt(req.query.start, 10) || 0,
-		results = parseInt(req.query.results, 10) || 20,
-		site = req.params.site;
-
-	db.get(site, function(err, data){
-		if (data === null){
-			return getAllData('site', site).then(function(siteSongs){
-				res.statusCode = 200;
-				return res.json(parseSongs(siteSongs, start, results));
+				return res.json(makeResponse(song_ids));
 			}, function(){
 				res.statusCode = 404;
 				return res.send({
@@ -54,55 +29,49 @@ app.get('/api/v3/site/:site/song-ids', function(req, res){
 			});
 		}
 		res.statusCode = 200;
-		return res.json(parseSongs(JSON.parse(data), start, results));
+		return res.json(makeResponse(JSON.parse(data)));
 	});
 });
 
 app.get('/api/v3/user/:user/loved-ids', function(req, res){
-	var username = req.params.user;
-	db.get(username + ':loved_ids', function(err, data){
+	var user = req.params.user;
+	db.get('user:' + user + ':song_ids', function(err, data){
 		if (data === null){
-			return getLoveIds(username).then(function(userLoveIds){
+			return getUserOrSiteIds('user', user).then(function(song_ids){
 				res.statusCode = 200;
-				return res.json(parseLoveIds(userLoveIds));
+				return res.json(makeResponse(song_ids));
 			}, function(){
 				res.statusCode = 404;
 				return res.send({
 					'status_code': 404,
-					'status_text': "Unknown user " + username + "."
+					'status_text': "Unknown user " + user + "."
 				});
 			});
 		}
 		res.statusCode = 200;
-		return res.json(parseLoveIds(JSON.parse(data)));
+		return res.json(makeResponse(JSON.parse(data)));
 	});
 });
 
 app.get('/api/v3/explore/:tag/song-ids', function(req, res){
     var tag = req.params.tag,
-        results = req.params.results,
-        path = apiBaseUrl + '/explore/' + tag + '/song-ids',
-        songIds;
+        results = req.query.results,
+        song_ids;
 
-    db.get(tag + ':song_ids', function(err, data){
+    db.get('genre:' + tag + ':song_ids', function(err, data){
         if (data === null){
-            return request
-                .get(path)
-                .query({'results': results})
-                .end(function(err, res){
-                    if(err){
-                        res.statusCode = 404;
-                        return res.send({
-                            'status_code': 404,
-                            'status_text': "Something went wrong getting genre song ids in fauxfm."
-                        });
-                    }
-                    res.statusCode = 200;
-                    insertIntoDB(tag + ':song_ids', res.body.song_ids);
-                    return res.send(res.body.song_ids);
-                });
+            return getGenreIds(tag, results).then(function(song_ids){
+				res.statusCode = 200;
+				return res.json(makeResponse(song_ids));
+			}, function(){
+				res.statusCode = 404;
+				return res.send({
+					'status_code': 404,
+					'status_text': "Unknown genre " + tag + "."
+				});
+			});
         }
-        return res.send(data);
+        return res.json(makeResponse(JSON.parse(data)));
     });
 });
 
@@ -126,101 +95,45 @@ leveldb.open(__dirname + '/fakedata.db', { create_if_missing: true }, function(e
 	app.listen(8088);
 });
 
-function parseSongs(s, start, results){
-	var songs;
-	if (start + results > s.length){
-		songs = s.slice(start, s.length);
-	}
-	else {
-		songs = s.slice(start, start + results);
-	}
+function makeResponse(songIds){
 	return {
-		'status_test': "OK",
+		'status_text': "OK",
 		'status_code': 200,
-		'results': songs.length,
-		'start': start,
-		'total': s.length,
-		'songs': songs
+		'total': songIds.length,
+		'song_ids': songIds
 	};
 }
 
-function parseLoveIds(userLoveIds){
-	return {
-		'status_test': "OK",
-		'status_code': 200,
-		'total': userLoveIds.length,
-		'song_ids': userLoveIds
-	};
-}
-
-function getAllData(entityType, entity){
+function getUserOrSiteIds(entity, tag){
     var d = when.defer(),
-        resultsSet = [],
-        resultsSize = 100,
-        start = 0,
-        startArray = [],
-        path;
-
-    if (entityType === 'user') {
-		path = apiBaseUrl + '/user/' + entity + '/loved';
-    }
-    if (entityType === 'site') {
-		path = apiBaseUrl + '/site/' + entity + '/songs';
-    }
-    request
-        .get(path)
-        .query({
-            'start': 0,
-            'results': 100
-        })
+		map = {
+			'user': '/user/' + tag + '/loved-ids',
+			'site': '/site/' + tag + '/all-song-ids'
+		};
+     request
+        .get(apiBaseUrl + map[entity])
         .end(function(res){
-            var total = res.body.total,
-                i;
             if (res.statusCode !== 200){
                 return d.reject();
             }
-            if (total > resultsSize){
-                resultsSet = resultsSet.concat(res.body.songs);
-                for (i = start + resultsSize; i < total; i = i + resultsSize){
-                    startArray.push(i);
-                }
-                return when.all(startArray.map(function(startVal){
-                    var p = when.defer();
-                    request
-                        .get(path)
-                        .query({
-                            'start': startVal,
-                            'results': resultsSize
-                        })
-                        .end(function(res){
-                            if (res.statusCode !== 200){
-                                return p.reject();
-                            }
-                            resultsSet = resultsSet.concat(res.body.songs);
-                            return p.resolve();
-                        });
-                    return p.promise;
-                })).then(function(){
-                    d.resolve(insertIntoDB(entity, resultsSet));
-                });
-            }
-            resultsSet = resultsSet.concat(res.body.songs);
-            d.resolve(insertIntoDB(entity, resultsSet));
+            return d.resolve(insertIntoDB(entity + ':' + tag + ':song_ids', res.body.song_ids));
         });
     return d.promise;
 }
 
-function getLoveIds(username){
-    var d = when.defer(),
-		path = apiBaseUrl + '/user/' + username + '/loved-ids';
-     request
-        .get(path)
-        .end(function(res){
-            if (res.statusCode !== 200){
-                return d.reject();
-            }
-            return d.resolve(insertIntoDB(username+':loved_ids', res.body.song_ids));
-        });
+function getGenreIds(tag, results){
+    var d = when.defer();
+    request
+		.get(apiBaseUrl + '/explore/' + tag + '/song-ids')
+		.query({
+			'results': results || 20
+		})
+		.end(function(res){
+			if (res.statusCode !== 200){
+				return d.reject();
+			}
+			return d.resolve(insertIntoDB('genre:' + tag + ':song_ids', res.body.song_ids));
+		});
     return d.promise;
 }
 

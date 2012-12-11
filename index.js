@@ -79,12 +79,16 @@ app.get('/api/v3/user/:user/loved-ids', function(req, res){
 });
 
 // Temporary path until this route is deployed to exfm prod
-app.get('/api/v3/explore/pop/song-ids', function(req, res){
+app.get('/api/v3/explore/:tag/song-ids', function(req, res){
     var songIds = [],
         i;
-    for(i = 1; i < 201; i++){
-        songIds.push(i);
+
+    if(res.params.tag === 'ahundredsongs'){
+        for(i = 1; i < 201; i++){
+            songIds.push(i);
+        }
     }
+
     return res.send({
         'total': 50000,
         'start': 0,

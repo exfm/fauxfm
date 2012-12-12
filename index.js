@@ -14,7 +14,6 @@ app.use(express.bodyParser());
 
 app.get('/api/v3/site/:site/all-song-ids', function(req, res){
 	var site = req.params.site;
-
 	db.get('site:' + site + ':song_ids', function(err, data){
 		if (data === null){
 			return getUserOrSiteIds('site', site).then(function(song_ids){
@@ -55,10 +54,10 @@ app.get('/api/v3/user/:user/loved-ids', function(req, res){
 
 app.get('/api/v3/explore/:tag/song-ids', function(req, res){
     var tag = req.params.tag,
-        results = req.query.results,
+        results = req.query.results || 20,
         song_ids;
 
-    db.get('genre:' + tag + ':song_ids', function(err, data){
+    db.get('genre:' + tag + ':song_ids:results:' + results, function(err, data){
         if (data === null){
             return getGenreIds(tag, results).then(function(song_ids){
 				res.statusCode = 200;
@@ -126,13 +125,13 @@ function getGenreIds(tag, results){
     request
 		.get(apiBaseUrl + '/explore/' + tag + '/song-ids')
 		.query({
-			'results': results || 20
+			'results': results
 		})
 		.end(function(res){
 			if (res.statusCode !== 200){
 				return d.reject();
 			}
-			return d.resolve(insertIntoDB('genre:' + tag + ':song_ids', res.body.song_ids));
+			return d.resolve(insertIntoDB('genre:' + tag + ':song_ids:results:' + results, res.body.song_ids));
 		});
     return d.promise;
 }
